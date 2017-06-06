@@ -1,0 +1,22 @@
+{
+	"name": "draytracer",
+	"authors": [
+		"Dzugaru"
+	],
+	"description": "Voxel editor with raytracing written in D",
+	"copyright": "Copyright 2017, Dzugaru",
+	"license": "free",
+
+	"dependencies": {
+		"cairod": "~>0.0.1-alpha.3+1.10.2"
+	},
+
+	"versions": ["CairoPNG", "CairoWin32Surface", "CairoWindowsDruntime", "Unicode"],
+
+	"libs-windows-x86-dmd": ["lib/32/mars/cairo"],
+    "libs-windows-x86-gdc": ["lib/32/msvc_mingw/cairo"],
+    "libs-windows-x86-ldc": ["lib/32/msvc_mingw/cairo"],
+    "libs-windows-x86_64": ["lib/64/cairo"],
+    "copyFiles-windows-x86": ["lib/32/*.dll"],
+    "copyFiles-windows-x86_64": ["lib/64/*.dll"]
+}
