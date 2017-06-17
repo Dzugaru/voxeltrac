@@ -41,7 +41,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int i
 }
 
 int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int iCmdShow)
-{
+{   
     hinst = hInstance;
     HACCEL hAccel;
     HWND hwnd;

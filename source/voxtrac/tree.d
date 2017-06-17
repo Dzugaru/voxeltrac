@@ -113,7 +113,7 @@ class Tree(T) {
         int xb = p.x < s.x ? 1 : 0;
         int yb = p.y < s.y ? 1 : 0;
         int zb = p.z < s.z ? 1 : 0;
-        return (zb << 2) | (yb << 1) | xb;
+        return (zb << 2) | (yb << 1) | xb;        
     }
 
     Branch createBranch(RectI3D vol, T val) {
@@ -126,33 +126,17 @@ class Tree(T) {
             int yb = (i >> 1) & 1;
             int zb = (i >> 2) & 1;
 
+            // dfmt off
             RectI3D sv;
-            if (xb == 1) {
-                sv.x0 = vol.x0;
-                sv.x1 = s.x;
-            }
-            else {
-                sv.x0 = s.x;
-                sv.x1 = vol.x1;
-            }
+            if (xb == 1) { sv.x0 = vol.x0; sv.x1 = s.x; }
+            else { sv.x0 = s.x; sv.x1 = vol.x1; }
 
-            if (yb == 1) {
-                sv.y0 = vol.y0;
-                sv.y1 = s.y;
-            }
-            else {
-                sv.y0 = s.y;
-                sv.y1 = vol.y1;
-            }
+            if (yb == 1) { sv.y0 = vol.y0; sv.y1 = s.y; }
+            else { sv.y0 = s.y; sv.y1 = vol.y1; }
 
-            if (zb == 1) {
-                sv.z0 = vol.z0;
-                sv.z1 = s.z;
-            }
-            else {
-                sv.z0 = s.z;
-                sv.z1 = vol.z1;
-            }
+            if (zb == 1) { sv.z0 = vol.z0; sv.z1 = s.z; }
+            else { sv.z0 = s.z; sv.z1 = vol.z1; }
+            // dfmt on
 
             if (sv.volume > 0) {
                 b.branches[i] = new Leaf(sv, val);
