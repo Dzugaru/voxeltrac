@@ -4,6 +4,7 @@ import std.stdio;
 import std.datetime;
 
 pragma(lib, "gdi32.lib");
+pragma(lib, "user32.lib");
 import windows.windef;
 import windows.winuser;
 import windows.wingdi;
@@ -21,9 +22,9 @@ import voxtrac.tree;
 alias RGB = cairo.cairo.RGB;  // conflicts with win32.wingdi.RGB
 
 extern (Windows)
-int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int iCmdShow)
+ulong WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int iCmdShow)
 {
-    int result;
+    ulong result;
 
     try
     {
@@ -40,7 +41,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int i
     return result;
 }
 
-int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int iCmdShow)
+ulong myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int iCmdShow)
 {   
     hinst = hInstance;
     HACCEL hAccel;

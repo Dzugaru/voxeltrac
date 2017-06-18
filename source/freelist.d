@@ -1,4 +1,5 @@
 import std.stdio;
+import core.memory;
 
 mixin template Freelist() {
 private:
@@ -31,7 +32,27 @@ public:
 class A {
     mixin Freelist;
 
-    void init() {
+    int[10000] payload = void;
 
+    void init() {
+        payload = 0;
     }
 }
+
+// unittest {
+//     GC.collect();
+//     GC.disable();
+
+//     size_t usedLast = GC.stats().usedSize;
+//     foreach(i; 0..10) {
+//         A a = A.create();
+//         a.destr();
+//         writeln(GC.stats().usedSize - usedLast);
+//     }      
+    
+
+//     GC.enable();
+//     GC.collect();
+
+//     writeln(GC.stats());
+// }
