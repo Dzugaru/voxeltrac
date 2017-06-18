@@ -2,6 +2,13 @@ import core.runtime;
 import std.utf;
 import std.stdio;
 import std.datetime;
+import std.file;
+import std.math;
+import std.algorithm;
+import std.conv;
+import std.typecons;
+import std.format;
+import core.time;
 
 //Needed for DMD
 //pragma(lib, "gdi32.lib");
@@ -80,6 +87,9 @@ ulong myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
     ShowWindow(hwnd, iCmdShow);
     UpdateWindow(hwnd);
 
+    t0 = Clock.currTime;
+    SetTimer(hwnd, 0, 1000 / 60, null);     
+
     while (GetMessage(&msg, null, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
@@ -90,31 +100,31 @@ ulong myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
     return msg.wParam;
 }
 
-void roundedRectangle(Context ctx, int x, int y, int w, int h, int radius_x = 5, int radius_y = 5) {
-    enum ARC_TO_BEZIER = 0.55228475;
+// void roundedRectangle(Context ctx, int x, int y, int w, int h, int radius_x = 5, int radius_y = 5) {
+//     enum ARC_TO_BEZIER = 0.55228475;
 
-    if (radius_x > w - radius_x)
-        radius_x = w / 2;
+//     if (radius_x > w - radius_x)
+//         radius_x = w / 2;
 
-    if (radius_y > h - radius_y)
-        radius_y = h / 2;
+//     if (radius_y > h - radius_y)
+//         radius_y = h / 2;
 
-    // approximate (quite close) the arc using a bezier curve
-    auto c1 = ARC_TO_BEZIER * radius_x;
-    auto c2 = ARC_TO_BEZIER * radius_y;
+//     // approximate (quite close) the arc using a bezier curve
+//     auto c1 = ARC_TO_BEZIER * radius_x;
+//     auto c2 = ARC_TO_BEZIER * radius_y;
 
-    ctx.newPath();
-    ctx.moveTo(x + radius_x, y);
-    ctx.relLineTo(w - 2 * radius_x, 0.0);
-    ctx.relCurveTo(c1, 0.0, radius_x, c2, radius_x, radius_y);
-    ctx.relLineTo(0, h - 2 * radius_y);
-    ctx.relCurveTo(0.0, c2, c1 - radius_x, radius_y, -radius_x, radius_y);
-    ctx.relLineTo(-w + 2 * radius_x, 0);
-    ctx.relCurveTo(-c1, 0, -radius_x, -c2, -radius_x, -radius_y);
-    ctx.relLineTo(0, -h + 2 * radius_y);
-    ctx.relCurveTo(0.0, -c2, radius_x - c1, -radius_y, radius_x, -radius_y);
-    ctx.closePath();
-}
+//     ctx.newPath();
+//     ctx.moveTo(x + radius_x, y);
+//     ctx.relLineTo(w - 2 * radius_x, 0.0);
+//     ctx.relCurveTo(c1, 0.0, radius_x, c2, radius_x, radius_y);
+//     ctx.relLineTo(0, h - 2 * radius_y);
+//     ctx.relCurveTo(0.0, c2, c1 - radius_x, radius_y, -radius_x, radius_y);
+//     ctx.relLineTo(-w + 2 * radius_x, 0);
+//     ctx.relCurveTo(-c1, 0, -radius_x, -c2, -radius_x, -radius_y);
+//     ctx.relLineTo(0, -h + 2 * radius_y);
+//     ctx.relCurveTo(0.0, -c2, radius_x - c1, -radius_y, radius_x, -radius_y);
+//     ctx.closePath();
+// }
 
 extern (Windows) LRESULT WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) nothrow {
     switch (message) {
@@ -130,6 +140,17 @@ extern (Windows) LRESULT WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
         return window.process(hwnd, message, wParam, lParam);
     else
         return DefWindowProc(hwnd, message, wParam, lParam);
+}
+
+
+SysTime t0;
+float objX = 0, objY = 0;
+
+void GameLoop(Duration dt) {
+    //objX += 10f * dt.total!"usecs" / 1000000.0;
+    //objY += 10f * dt.total!"usecs" / 1000000.0;
+
+    //append("test.txt", format("%f %f\r\n", objX, objY));
 }
 
 Window window;
@@ -160,6 +181,17 @@ class Window {
             case WM_ERASEBKGND:
                 return 0;
 
+            case WM_TIMER:
+                auto t1 = Clock.currTime;
+                auto dt = t1 - t0;
+                t0 = t1;                
+                
+                //append("test.txt", Clock.currTime.toString() ~ "\r\n");
+                GameLoop(dt);                
+                InvalidateRect(hwnd, cast(const(RECT)*)0, 0);
+                //return OnPaint(hwnd, message, wParam, lParam);
+                return 0;
+
             default:
             }
         }
@@ -188,30 +220,65 @@ class Window {
         hBitmap = CreateCompatibleBitmap(hdc, width, height);
         hOldBitmap = SelectObject(_buffer, hBitmap);
 
-        auto surf = new Win32Surface(_buffer);
-        auto ctx = Context(surf);
+        
+        //for(int i = top; i < bottom; ++i)
+        //    for(int j = left; j < bottom; ++j)
+        //        SetPixelV(_buffer, j, i, core.sys.windows.wingdi.RGB(0,255,0));
+        //SetPixel(_buffer, roundTo!int(objX), roundTo!int(objY), core.sys.windows.wingdi.RGB(255,255,255));
+        
 
-        ctx.setSourceRGB(1, 1, 1);
+        auto surf = new Win32Surface(_buffer);      
+        auto image = new ImageSurface(Format.CAIRO_FORMAT_RGB24, width, height);
+        auto dataPtr = image.getData();
+
+        auto stride = formatStrideForWidth(Format.CAIRO_FORMAT_RGB24, width);        
+
+        //foreach(i; 0..100) 
+        //    dataPtr[i] = 255;
+        //image.flush();
+        static ubyte color = 0;
+        color += 3;
+
+        foreach(y; 0..height) 
+            foreach(x; 0..width) {                
+                //dataPtr[y*stride + x * 4] = 0;
+                dataPtr[y*stride + x * 4 + 2] = color;
+                //dataPtr[y*stride + x * 4 + 2] = 0;
+            }
+
+        //append("test.txt", format("%d %d\r\n", height, width));
+        
+
+        image.flush();
+            
+        
+        auto ctx = Context(surf);
+        ctx.setSourceSurface(image, 0, 0);
         ctx.paint();
 
-        roundedRectangle(ctx, 50, 50, 250, 250, 10, 10);
+        image.dispose();
 
-        auto clr = RGB(0.9411764705882353, 0.996078431372549, 0.9137254901960784);
-        //auto clr = RGB(0.5,0,0);
-        ctx.setSourceRGB(clr);
-        ctx.fillPreserve();
+        // ctx.setSourceRGB(1, 1, 1);
+        // ctx.paint();
 
-        clr = RGB(0.7019607843137254, 1.0, 0.5529411764705883);
-        ctx.setSourceRGB(clr);
-        ctx.stroke();
+        // roundedRectangle(ctx, 50, 50, 250, 250, 10, 10);
 
-        ctx.setSourceRGB(0, 0, 0);
-        ctx.selectFontFace("Arial", FontSlant.CAIRO_FONT_SLANT_NORMAL,
-                FontWeight.CAIRO_FONT_WEIGHT_NORMAL);
-        ctx.setFontSize(10.0);
-        auto txt = "Cairo is the greatest thing!";
-        ctx.moveTo(5.0, 10.0);
-        ctx.showText(txt);
+        // auto clr = RGB(0.9411764705882353, 0.996078431372549, 0.9137254901960784);
+        // //auto clr = RGB(0.5,0,0);
+        // ctx.setSourceRGB(clr);
+        // ctx.fillPreserve();
+
+        // clr = RGB(0.7019607843137254, 1.0, 0.5529411764705883);
+        // ctx.setSourceRGB(clr);
+        // ctx.stroke();
+
+        // ctx.setSourceRGB(0, 0, 0);
+        // ctx.selectFontFace("Arial", FontSlant.CAIRO_FONT_SLANT_NORMAL,
+        //         FontWeight.CAIRO_FONT_WEIGHT_NORMAL);
+        // ctx.setFontSize(10.0);
+        // auto txt = "Cairo is the greatest thing!";
+        // ctx.moveTo(5.0, 10.0);
+        // ctx.showText(txt);
 
         surf.finish();
         BitBlt(hdc, 0, 0, width, height, _buffer, x, y, SRCCOPY);

@@ -29,15 +29,15 @@ public:
     }
 }
 
-class A {
-    mixin Freelist;
+// class A {
+//     mixin Freelist;
 
-    int[10000] payload = void;
+//     int[10000] payload = void;
 
-    void init() {
-        payload = 0;
-    }
-}
+//     void init() {
+//         payload = 0;
+//     }
+// }
 
 // unittest {
 //     GC.collect();
