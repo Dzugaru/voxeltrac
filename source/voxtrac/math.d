@@ -64,7 +64,7 @@ alias VectorF3 = Vector3!float;
 unittest {
     VectorF3 v = VectorF3(1, 2, 3);
 
-    //writeln(v * 3.0);
+    writeln(v * 3.0);
     // writeln(v / 2.0);
     // writeln(3.0 * v);
 }

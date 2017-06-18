@@ -3,13 +3,17 @@ import std.utf;
 import std.stdio;
 import std.datetime;
 
-pragma(lib, "gdi32.lib");
-pragma(lib, "user32.lib");
-import windows.windef;
-import windows.winuser;
-import windows.wingdi;
+//Needed for DMD
+//pragma(lib, "gdi32.lib");
+//pragma(lib, "user32.lib");
 
-string appName     = "CairoWindow";
+//NOTE: cairo should not depend on windows-headers package either (remove the dependency from its dub.json)
+
+import core.sys.windows.windef;
+import core.sys.windows.winuser;
+import core.sys.windows.wingdi;
+
+string appName = "CairoWindow";
 string description = "A simple win32 window with Cairo drawing";
 HINSTANCE hinst;
 
@@ -19,21 +23,18 @@ import cairo.win32;
 
 import voxtrac.tree;
 
-alias RGB = cairo.cairo.RGB;  // conflicts with win32.wingdi.RGB
+alias RGB = cairo.cairo.RGB; // conflicts with win32.wingdi.RGB
 
-extern (Windows)
-ulong WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int iCmdShow)
-{
+extern (Windows) ulong WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+        LPSTR lpCmdLine, int iCmdShow) {
     ulong result;
 
-    try
-    {
+    try {
         Runtime.initialize();
         result = myWinMain(hInstance, hPrevInstance, lpCmdLine, iCmdShow);
         Runtime.terminate();
     }
-    catch (Throwable o)
-    {
+    catch (Throwable o) {
         MessageBox(null, o.toString().toUTF16z, "Error", MB_OK | MB_ICONEXCLAMATION);
         result = 0;
     }
@@ -41,59 +42,55 @@ ulong WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
     return result;
 }
 
-ulong myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int iCmdShow)
-{   
+ulong myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int iCmdShow) {
     hinst = hInstance;
     HACCEL hAccel;
     HWND hwnd;
-    MSG  msg;
+    MSG msg;
     WNDCLASS wndclass;
 
-    wndclass.style         = CS_HREDRAW | CS_VREDRAW;
-    wndclass.lpfnWndProc   = &WndProc;
-    wndclass.cbClsExtra    = 0;
-    wndclass.cbWndExtra    = 0;
-    wndclass.hInstance     = hInstance;
-    wndclass.hIcon         = LoadIcon(null, IDI_APPLICATION);
-    wndclass.hCursor       = LoadCursor(null, IDC_ARROW);
+    wndclass.style = CS_HREDRAW | CS_VREDRAW;
+    wndclass.lpfnWndProc = &WndProc;
+    wndclass.cbClsExtra = 0;
+    wndclass.cbWndExtra = 0;
+    wndclass.hInstance = hInstance;
+    wndclass.hIcon = LoadIcon(null, IDI_APPLICATION);
+    wndclass.hCursor = LoadCursor(null, IDC_ARROW);
     wndclass.hbrBackground = cast(HBRUSH) GetStockObject(WHITE_BRUSH);
-    wndclass.lpszMenuName  = appName.toUTF16z;
+    wndclass.lpszMenuName = appName.toUTF16z;
     wndclass.lpszClassName = appName.toUTF16z;
 
-    if (!RegisterClass(&wndclass))
-    {
+    if (!RegisterClass(&wndclass)) {
         MessageBox(null, "This program requires Windows NT!", appName.toUTF16z, MB_ICONERROR);
         return 0;
     }
 
-    hwnd = CreateWindow(appName.toUTF16z,              // window class name
-                        description.toUTF16z,          // window caption
-                        WS_OVERLAPPEDWINDOW,           // window style
-                        400,                 // initial x position
-                        400,                 // initial y position
-                        400,                 // initial x size
-                        400,                 // initial y size
-                        null,                          // parent window handle
-                        null,                          // window menu handle
-                        hInstance,                     // program instance handle
-                        null);                         // creation parameters
+    hwnd = CreateWindow(appName.toUTF16z, // window class name
+            description.toUTF16z, // window caption
+            WS_OVERLAPPEDWINDOW, // window style
+            400, // initial x position
+            400, // initial y position
+            400, // initial x size
+            400, // initial y size
+            null, // parent window handle
+            null, // window menu handle
+            hInstance, // program instance handle
+            null); // creation parameters
 
     ShowWindow(hwnd, iCmdShow);
     UpdateWindow(hwnd);
 
-    while (GetMessage(&msg, null, 0, 0))
-    {
+    while (GetMessage(&msg, null, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
 
-		//writeln(Clock.currTime);
+        //writeln(Clock.currTime);
     }
 
     return msg.wParam;
 }
 
-void roundedRectangle(Context ctx, int x, int y, int w, int h, int radius_x = 5, int radius_y = 5)
-{
+void roundedRectangle(Context ctx, int x, int y, int w, int h, int radius_x = 5, int radius_y = 5) {
     enum ARC_TO_BEZIER = 0.55228475;
 
     if (radius_x > w - radius_x)
@@ -119,18 +116,14 @@ void roundedRectangle(Context ctx, int x, int y, int w, int h, int radius_x = 5,
     ctx.closePath();
 }
 
-extern (Windows)
-LRESULT WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    switch (message)
-    {
-        case WM_CREATE:
-        {
+extern (Windows) LRESULT WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) nothrow {
+    switch (message) {
+    case WM_CREATE: {
             window = new Window(hwnd);
             return 0;
         }
 
-        default:
+    default:
     }
 
     if (window)
@@ -141,9 +134,8 @@ LRESULT WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 Window window;
 
-class Window
-{
-    int  x, y;
+class Window {
+    int x, y;
     HWND hwnd;
     HDC hdc;
     PAINTSTRUCT ps;
@@ -152,15 +144,13 @@ class Window
     HBITMAP hBitmap;
     HBITMAP hOldBitmap;
 
-    this(HWND hwnd)
-    {
+    this(HWND hwnd) nothrow {
         this.hwnd = hwnd;
     }
 
-    LRESULT process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-    {
-        switch (message)
-        {
+    LRESULT process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) nothrow {
+        try {
+            switch (message) {
             case WM_DESTROY:
                 return OnDestroy(hwnd, message, wParam, lParam);
 
@@ -171,13 +161,16 @@ class Window
                 return 0;
 
             default:
+            }
+        }
+        catch (Throwable e) {
+
         }
 
         return DefWindowProc(hwnd, message, wParam, lParam);
     }
 
-    auto OnPaint(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-    {
+    auto OnPaint(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {        
         hdc = BeginPaint(hwnd, &ps);
         GetClientRect(hwnd, &rc);
 
@@ -186,13 +179,13 @@ class Window
         auto right = rc.right;
         auto bottom = rc.bottom;
 
-        auto width  = right - left;
+        auto width = right - left;
         auto height = bottom - top;
         x = left;
         y = top;
 
-        _buffer    = CreateCompatibleDC(hdc);
-        hBitmap    = CreateCompatibleBitmap(hdc, width, height);
+        _buffer = CreateCompatibleDC(hdc);
+        hBitmap = CreateCompatibleBitmap(hdc, width, height);
         hOldBitmap = SelectObject(_buffer, hBitmap);
 
         auto surf = new Win32Surface(_buffer);
@@ -204,7 +197,7 @@ class Window
         roundedRectangle(ctx, 50, 50, 250, 250, 10, 10);
 
         auto clr = RGB(0.9411764705882353, 0.996078431372549, 0.9137254901960784);
-		//auto clr = RGB(0.5,0,0);
+        //auto clr = RGB(0.5,0,0);
         ctx.setSourceRGB(clr);
         ctx.fillPreserve();
 
@@ -213,7 +206,8 @@ class Window
         ctx.stroke();
 
         ctx.setSourceRGB(0, 0, 0);
-        ctx.selectFontFace("Arial", FontSlant.CAIRO_FONT_SLANT_NORMAL, FontWeight.CAIRO_FONT_WEIGHT_NORMAL);
+        ctx.selectFontFace("Arial", FontSlant.CAIRO_FONT_SLANT_NORMAL,
+                FontWeight.CAIRO_FONT_WEIGHT_NORMAL);
         ctx.setFontSize(10.0);
         auto txt = "Cairo is the greatest thing!";
         ctx.moveTo(5.0, 10.0);
@@ -227,11 +221,10 @@ class Window
         DeleteDC(_buffer);
 
         EndPaint(hwnd, &ps);
-        return 0;		
+        return 0;
     }
 
-    auto OnDestroy(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-    {
+    auto OnDestroy(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
         PostQuitMessage(0);
         return 0;
     }
