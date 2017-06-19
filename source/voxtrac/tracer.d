@@ -8,15 +8,7 @@ import std.stdio;
 import voxtrac.math;
 import voxtrac.tree;
 
-struct Ray {
-public:
-    VectorF3 orig, dir;
 
-    this(float x0, float y0, float z0, float dx, float dy, float dz) {
-        orig = VectorF3(x0, y0, z0);
-        dir = VectorF3(dx, dy, dz);
-    }
-}
 
 VectorF3 traceInside(Ray ray, RectI3D vol) {
     float x = ray.dir.x < 0 ? vol.x0 : vol.x1;
@@ -88,5 +80,5 @@ Nullable!VectorF3 traceOutside(Ray ray, RectI3D vol) {
 //     }
 
 unittest {
-    writeln(traceOutside(Ray(0,0,2,0.9,0.1,-1), RectI3D(0,0,0,1,1,1)));
+    //writeln(traceOutside(Ray(0,0,2,0.9,0.1,-1), RectI3D(0,0,0,1,1,1)));
 }

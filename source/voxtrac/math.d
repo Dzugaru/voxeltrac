@@ -2,6 +2,7 @@ module voxtrac.math;
 
 import std.string;
 import std.stdio;
+import std.math;
 
 struct Point3D(T) {
     T x, y, z;
@@ -38,28 +39,67 @@ alias RectI3D = Rect3D!int;
 alias PointI3D = Point3D!int;
 
 struct Vector3(T) {
+    private alias VT = typeof(this);
+
     T x, y, z;
 
     string toString() const {
         return format("(%s,%s,%s)", x, y, z);
     }
 
-    typeof(this) opBinary(string op)(typeof(this) rhs) if (op == "+" || op == "-") {
-        return Vector3!T(mixin("x " ~ op ~ " rhs.x"), mixin("y " ~ op ~ " rhs.y"),
+    VT opBinary(string op)(VT rhs) if (op == "+" || op == "-") {
+        return VT(mixin("x " ~ op ~ " rhs.x"), mixin("y " ~ op ~ " rhs.y"),
                 mixin("z " ~ op ~ " rhs.z"));
     }
 
-    typeof(this) opBinary(string op, R)(R rhs) if (op == "*" || op == "/") {
-        return Vector3!T(mixin("x " ~ op ~ " rhs"), mixin("y " ~ op ~ " rhs"),
+    ref VT opOpAssign(string op)(VT rhs) if (op == "+" || op == "-") {            
+        mixin("x " ~ op ~ "= rhs.x;");
+        mixin("y " ~ op ~ "= rhs.y;");
+        mixin("z " ~ op ~ "= rhs.z;");
+
+        return this;
+    }
+
+    VT opBinary(string op, R)(R rhs) if (op == "*" || op == "/") {
+        return VT(mixin("x " ~ op ~ " rhs"), mixin("y " ~ op ~ " rhs"),
                 mixin("z " ~ op ~ " rhs"));
     }
 
-    typeof(this) opBinaryRight(string op, R)(R lhs) if (op == "*") {
-        return Vector3!T(x * lhs, y * lhs, z * lhs);
+    VT opBinaryRight(string op, R)(R lhs) if (op == "*") {
+        return VT(x * lhs, y * lhs, z * lhs);
+    }
+
+    static VT cross(VT a, VT b) {
+        return VT(a.y * b.z - a.z * b.y, 
+                  a.z * b.x - a.x * b.z,
+                  a.x * b.y - a.y * b.x);
+    }
+
+    T norm() {
+        return sqrt(x ^^ 2 + y ^^ 2 + z ^^ 2);
+    }
+
+    VT normalized() {
+        return this / norm();
     }
 }
 
 alias VectorF3 = Vector3!float;
+
+struct Ray {
+public:
+    VectorF3 orig, dir;
+
+    this(float x0, float y0, float z0, float dx, float dy, float dz) {
+        orig = VectorF3(x0, y0, z0);
+        dir = VectorF3(dx, dy, dz);
+    }
+
+    this(VectorF3 orig, VectorF3 dir) {
+        this.orig = orig;
+        this.dir = dir;
+    }
+}
 
 unittest {
     VectorF3 v = VectorF3(1, 2, 3);
